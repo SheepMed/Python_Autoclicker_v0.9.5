@@ -65,6 +65,10 @@ class AutoClickerApp:
                 if self.auto_click_thread:
                     self.auto_click_thread.join()
                     self.auto_click_thread = None
+                self.root.after(0, self.update_start_stop_button_text, "Start Clicking")
+
+    def update_start_stop_button_text(self, text):
+        self.start_stop_button.config(text=text)
 
     def exit_program(self):
         self.running = False
@@ -76,3 +80,4 @@ class AutoClickerApp:
 root = tk.Tk()
 app = AutoClickerApp(root)
 root.mainloop()
+#yeet
