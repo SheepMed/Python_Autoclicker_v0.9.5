@@ -13,13 +13,19 @@ class AutoClickerApp:
         self.delay = 0.001
         self.button = Button.right
         self.running = False
-        self.hotkey = KeyCode(char='c')  # Hotkey to stop auto-clicking
+        self.hotkey = KeyCode(char='c')  # Default hotkey
 
         self.start_stop_key = KeyCode(char='a')
         self.stop_key = KeyCode(char='b')
 
         self.start_stop_button = tk.Button(self.root, text="Start Clicking", command=self.toggle_clicking)
         self.start_stop_button.pack(pady=10)
+
+        self.change_hotkey_button = tk.Button(self.root, text="Change Hotkey", command=self.change_hotkey)
+        self.change_hotkey_button.pack(pady=5)
+
+        self.hotkey_label = tk.Label(self.root, text="Hotkey: {}".format(self.hotkey.char))
+        self.hotkey_label.pack(pady=5)
 
         self.exit_button = tk.Button(self.root, text="Exit", command=self.exit_program)
         self.exit_button.pack(pady=5)
@@ -69,6 +75,27 @@ class AutoClickerApp:
 
     def update_start_stop_button_text(self, text):
         self.start_stop_button.config(text=text)
+
+    def change_hotkey(self):
+        new_hotkey = self.get_new_hotkey()
+        if new_hotkey:
+            self.hotkey = new_hotkey
+            self.hotkey_label.config(text="Hotkey: {}".format(self.hotkey.char))
+
+    def get_new_hotkey(self):
+        def on_new_hotkey_press(key):
+            nonlocal new_key
+            new_key = key
+            listener.stop()
+
+        new_key = None
+        listener = Listener(on_press=on_new_hotkey_press)
+        listener.start()
+
+        while new_key is None:
+            time.sleep(0.1)
+
+        return new_key
 
     def exit_program(self):
         self.running = False
