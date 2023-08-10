@@ -10,34 +10,40 @@ class AutoClickerApp:
         self.root = root
         self.root.title("Auto Clicker")
 
+        # Initialize controller, default values, and hotkey
         self.mouse = Controller()
         self.delay = 0.001
         self.button = Button.right
-        self.hotkey = KeyCode(char='c')  # Default hotkey
+        self.hotkey = KeyCode(char='c')
 
+        # Define keyboard keys
         self.start_stop_key = KeyCode(char='a')
         self.stop_key = KeyCode(char='b')
 
+        # Create GUI components
         self.start_stop_button = tk.Button(self.root, text="Start Clicking", command=self.toggle_clicking)
-        self.start_stop_button.pack(pady=10)
-
         self.change_hotkey_button = tk.Button(self.root, text="Change Hotkey", command=self.change_hotkey)
-        self.change_hotkey_button.pack(pady=5)
-
         self.change_delay_button = tk.Button(self.root, text="Change Delay", command=self.change_delay)
-        self.change_delay_button.pack(pady=5)
-
         self.hotkey_label = tk.Label(self.root, text="Hotkey: {}".format(self.hotkey.char))
-        self.hotkey_label.pack(pady=5)
-
         self.delay_label = tk.Label(self.root, text="Current Delay: {}".format(self.delay))
-        self.delay_label.pack(pady=5)
+        self.exit_button = tk.Button(self.root, text="Exit", command=self.exit_program)
 
+        # Place GUI components using grid layout
+        self.start_stop_button.grid(row=0, column=0, pady=10)
+        self.change_hotkey_button.grid(row=1, column=0, pady=5)
+        self.change_delay_button.grid(row=2, column=0, pady=5)
+        self.hotkey_label.grid(row=3, column=0, pady=5)
+        self.delay_label.grid(row=4, column=0, pady=5)
+        self.exit_button.grid(row=5, column=0, pady=5)
+
+        # Create listener for hotkey
         self.listener = Listener(on_press=self.on_key_press)
         self.listener.start()
 
-        self.clicking = False  # To keep track of the auto-clicking loop
-        self.auto_click_thread = None  # Thread for auto-clicking
+        # Auto-clicking state and thread
+        self.clicking = False
+        self.auto_click_thread = None
+
 
     def toggle_clicking(self):
         if self.auto_click_thread and self.auto_click_thread.is_alive():
@@ -95,6 +101,10 @@ class AutoClickerApp:
         self.listener.stop()
         self.root.destroy()
 
-root = tk.Tk()
-app = AutoClickerApp(root)
-root.mainloop()
+def main():
+    root = tk.Tk()
+    app = AutoClickerApp(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
