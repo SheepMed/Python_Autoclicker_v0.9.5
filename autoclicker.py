@@ -1,5 +1,6 @@
 import threading
 import tkinter as tk
+from tkinter import simpledialog
 from pynput.mouse import Button, Controller
 from pynput.keyboard import Listener, KeyCode
 import time
@@ -12,7 +13,6 @@ class AutoClickerApp:
         self.mouse = Controller()
         self.delay = 0.001
         self.button = Button.right
-        self.running = False
         self.hotkey = KeyCode(char='c')  # Default hotkey
 
         self.start_stop_key = KeyCode(char='a')
@@ -24,11 +24,14 @@ class AutoClickerApp:
         self.change_hotkey_button = tk.Button(self.root, text="Change Hotkey", command=self.change_hotkey)
         self.change_hotkey_button.pack(pady=5)
 
+        self.change_delay_button = tk.Button(self.root, text="Change Delay", command=self.change_delay)
+        self.change_delay_button.pack(pady=5)
+
         self.hotkey_label = tk.Label(self.root, text="Hotkey: {}".format(self.hotkey.char))
         self.hotkey_label.pack(pady=5)
 
-        self.exit_button = tk.Button(self.root, text="Exit", command=self.exit_program)
-        self.exit_button.pack(pady=5)
+        self.delay_label = tk.Label(self.root, text="Current Delay: {}".format(self.delay))
+        self.delay_label.pack(pady=5)
 
         self.listener = Listener(on_press=self.on_key_press)
         self.listener.start()
@@ -37,18 +40,15 @@ class AutoClickerApp:
         self.auto_click_thread = None  # Thread for auto-clicking
 
     def toggle_clicking(self):
-        self.running = not self.running
-        if self.running:
-            self.start_stop_button.config(text="Stop Clicking")
+        if self.auto_click_thread and self.auto_click_thread.is_alive():
+            self.clicking = False
+            self.auto_click_thread.join()
+            self.start_stop_button.config(text="Start Clicking")
+        else:
             self.clicking = True
             self.auto_click_thread = threading.Thread(target=self.auto_click)
             self.auto_click_thread.start()
-        else:
-            self.start_stop_button.config(text="Start Clicking")
-            self.clicking = False
-            if self.auto_click_thread:
-                self.auto_click_thread.join()
-                self.auto_click_thread = None
+            self.start_stop_button.config(text="Stop Clicking")
 
     def auto_click(self):
         while self.clicking:
@@ -56,25 +56,8 @@ class AutoClickerApp:
             time.sleep(self.delay)
 
     def on_key_press(self, key):
-        if key == self.start_stop_key:
+        if key == self.hotkey:
             self.toggle_clicking()
-        elif key == self.stop_key:
-            self.running = False
-            self.clicking = False
-            if self.auto_click_thread:
-                self.auto_click_thread.join()
-                self.auto_click_thread = None
-        elif key == self.hotkey:
-            if self.running:
-                self.running = False
-                self.clicking = False
-                if self.auto_click_thread:
-                    self.auto_click_thread.join()
-                    self.auto_click_thread = None
-                self.root.after(0, self.update_start_stop_button_text, "Start Clicking")
-
-    def update_start_stop_button_text(self, text):
-        self.start_stop_button.config(text=text)
 
     def change_hotkey(self):
         new_hotkey = self.get_new_hotkey()
@@ -83,19 +66,27 @@ class AutoClickerApp:
             self.hotkey_label.config(text="Hotkey: {}".format(self.hotkey.char))
 
     def get_new_hotkey(self):
-        def on_new_hotkey_press(key):
-            nonlocal new_key
-            new_key = key
-            listener.stop()
+        try:
+            hotkey_str = simpledialog.askstring("Change Hotkey", "Enter new hotkey:")
+            if hotkey_str:
+                return KeyCode(char=hotkey_str)
+            else:
+                return None
+        except ValueError:
+            return None
 
-        new_key = None
-        listener = Listener(on_press=on_new_hotkey_press)
-        listener.start()
+    def change_delay(self):
+        new_delay = self.get_new_delay()
+        if new_delay is not None:
+            self.delay = new_delay
+            self.delay_label.config(text="Current Delay: {}".format(self.delay))
 
-        while new_key is None:
-            time.sleep(0.1)
-
-        return new_key
+    def get_new_delay(self):
+        try:
+            new_delay = float(simpledialog.askstring("Change Delay", "Enter new delay (in seconds):"))
+            return max(0, new_delay)  # Ensure delay is non-negative
+        except (ValueError, TypeError):
+            return None
 
     def exit_program(self):
         self.running = False
@@ -107,4 +98,3 @@ class AutoClickerApp:
 root = tk.Tk()
 app = AutoClickerApp(root)
 root.mainloop()
-#yeet
